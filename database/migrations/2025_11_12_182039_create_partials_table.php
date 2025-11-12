@@ -15,6 +15,7 @@ return new class extends Migration
         Schema::create('partials', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(Page::class);
+            $table->boolean('is_active')->default(true);
             $table->string('title')->nullable();
             $table->longText('content')->nullable();
             $table->timestamps();

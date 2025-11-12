@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Page extends Model
@@ -56,6 +57,11 @@ class Page extends Model
     public function partials(): HasMany
     {
         return $this->hasMany(Partial::class);
+    }
+
+    public function getCoverUrlAttribute(): ?string
+    {
+        return $this->cover ? Storage::url($this->cover) : null;
     }
 
     protected function generateUniqueSlug(string $title): string
