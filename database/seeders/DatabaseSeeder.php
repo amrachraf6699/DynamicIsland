@@ -17,9 +17,15 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Ensure at least one user exists
+        if (! \App\Models\User::query()->exists()) {
+            User::factory()->create([
+                'name' => 'Admin',
+                'email' => 'admin@example.com',
+            ]);
+        }
+
+        // Seed roles and permissions (creates Super-Admin and grants all permissions)
+        $this->call(RolesAndPermissionsSeeder::class);
     }
 }

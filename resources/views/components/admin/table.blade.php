@@ -100,8 +100,16 @@
                                 $label = $action['label'] ?? 'تحرير';
                                 $type = $action['type'] ?? 'link';
                                 $variant = $action['variant'] ?? null; // optional: primary | ghost
+                                $ability = 'read';
+                                if ($type === 'delete' || ($routeName && str_ends_with($routeName, '.destroy'))) {
+                                    $ability = 'delete';
+                                } elseif ($type === 'create' || ($routeName && str_ends_with($routeName, '.create'))) {
+                                    $ability = 'create';
+                                } elseif ($type === 'link' || ($routeName && (str_ends_with($routeName, '.edit') || str_ends_with($routeName, '.update')))) {
+                                    $ability = 'update';
+                                }
                                 @endphp
-
+                                @can(($resource ?? null) ? ($resource . '.' . $ability) : $ability)
                                 @if ($type === 'delete')
                                 <form method="POST" action="{{ $url }}" class="inline" data-confirm="true">
                                     @csrf
@@ -123,6 +131,7 @@
                                     {{ $label }}
                                 </a>
                                 @endif
+                                @endcan
                                 @endforeach
                             </div>
                         </td>

@@ -60,6 +60,7 @@ $actions = [
             </button>
         </form>
 
+        @can($resourceName . '.create')
         <a href="{{ Route::has('admin.' . $resourceName . '.create') ? route('admin.' . $resourceName . '.create') : '#' }}"
             class="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
@@ -68,6 +69,7 @@ $actions = [
             </svg>
             إضافة {{ $title }}
         </a>
+        @endcan
     </div>
 
     <x-admin.table :columns="$columns ?? []" :rows="$items" :resource="$resourceName" :actions="$actions" />

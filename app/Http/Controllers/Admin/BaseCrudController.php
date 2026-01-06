@@ -59,6 +59,17 @@ abstract class BaseCrudController extends Controller
         if (! isset($this->resourceName, $this->model)) {
             throw new \InvalidArgumentException(static::class . ' must define $resourceName and $model.');
         }
+
+        // Attach CRUD permission middleware per resource
+        $this->middleware('can:' . $this->permissionName('read'))->only(['index']);
+        $this->middleware('can:' . $this->permissionName('create'))->only(['create', 'store']);
+        $this->middleware('can:' . $this->permissionName('update'))->only(['edit', 'update']);
+        $this->middleware('can:' . $this->permissionName('delete'))->only(['destroy']);
+    }
+
+    protected function permissionName(string $action): string
+    {
+        return sprintf('%s.%s', $this->resourceName, $action);
     }
 
     public function index(Request $request): Renderable

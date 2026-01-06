@@ -6,7 +6,21 @@
     use Illuminate\Support\Facades\Route;
 
     $brand = config('admin.brand', []);
-    $resources = config('admin.resources', []);
+    $resources = collect(config('admin.resources', []))
+        ->filter(function ($resource) {
+            $routeName = $resource['route'] ?? null;
+            if ($routeName === 'admin.dashboard') {
+                return true;
+            }
+            if (!auth()->check() || !$routeName) {
+                return false;
+            }
+            $parts = explode('.', $routeName);
+            $resourceKey = $parts[1] ?? null;
+            return $resourceKey && auth()->user()->can($resourceKey . '.read');
+        })
+        ->values()
+        ->all();
     $logo = asset($brand['logo'] ?? 'logo.png');
     $loading = asset($brand['loading'] ?? 'loading.gif');
     $boxIcons = [
@@ -152,16 +166,17 @@
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('layoutState', () => ({
+                // Sidebar is open and expanded by default on desktop, hidden on mobile
                 sidebarOpen: window.innerWidth >= 1024,
-                sidebarCollapsed: window.innerWidth < 1440,
+                sidebarCollapsed: false,
                 init() {
                     window.addEventListener('resize', () => {
-                        if (window.innerWidth >= 1024 && window.innerWidth < 1440) {
-                            this.sidebarCollapsed = true;
-                        } else if (window.innerWidth >= 1440) {
+                        if (window.innerWidth >= 1024) {
+                            // Ensure the sidebar is visible and expanded on desktop
+                            this.sidebarOpen = true;
                             this.sidebarCollapsed = false;
-                        }
-                        if (window.innerWidth < 1024) {
+                        } else {
+                            // Hide sidebar entirely on mobile; use burger to open
                             this.sidebarOpen = false;
                         }
                     });
@@ -185,19 +200,35 @@
 
     <!-- Improved responsive sidebar with better mobile handling -->
     <aside
-        class="glass-panel scroll-thin fixed inset-y-0 right-0 z-40 flex flex-col border border-slate-200 transition-all duration-300 ease-out"
+        class="glass-panel scroll-thin fixed inset-y-0 right-0 z-40 flex flex-col border border-slate-200 transition-all duration-300 ease-out lg:translate-x-0"
         :class="[
             sidebarOpen ? 'translate-x-0' : 'translate-x-full',
             sidebarCollapsed ? 'w-20 sm:w-24' : 'w-72 sm:w-80'
         ]"
     >
         <!-- Sidebar Header -->
-        <div class="flex items-center gap-2 sm:gap-3 border-b border-slate-200 px-3 sm:px-5 py-3 sm:py-4 flex-shrink-0">
+        <div class="flex items-center gap-2 sm:gap-3 border-b border-white/10 px-3 sm:px-5 py-3 sm:py-4 flex-shrink-0">
             <img src="{{ $logo }}" alt="شعار الإدارة" class="h-10 sm:h-12 w-10 sm:w-12 rounded-xl sm:rounded-2xl border-2 border-indigo-400 object-cover flex-shrink-0">
             <div class="flex-1 min-w-0" x-cloak x-show="!sidebarCollapsed">
-                <p class="text-xs tracking-[0.3em] text-indigo-400/90 truncate">إدارة</p>
-                <p class="text-base sm:text-lg font-semibold text-slate-900 truncate">{{ $brand['name'] ?? config('app.name') }}</p>
+                <p class="text-xs tracking-[0.3em] text-black truncate">إدارة</p>
+                <p class="text-base sm:text-lg font-semibold text-indigo-700 truncate">{{ $brand['name'] ?? config('app.name') }}</p>
             </div>
+            <button
+                class="flex items-center justify-center
+                    w-4 h-4 sm:w-8 sm:h-8
+                    rounded-full
+                    bg-indigo-500/10 text-indigo-300
+                    transition hover:bg-indigo-500/20
+                    flex-shrink-0"
+                @click="sidebarCollapsed = !sidebarCollapsed"
+                :title="sidebarCollapsed ? 'توسيع القائمة' : 'طي القائمة'"
+            >
+                <i
+                    class="bx text-lg sm:text-xl"
+                    :class="sidebarCollapsed ? 'bx-chevrons-left' : 'bx-chevrons-right'"
+                ></i>
+            </button>
+
         </div>
 
         <!-- Navigation -->
@@ -215,7 +246,12 @@
                     $navClasses = $isActive
                         ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm'
                         : 'text-slate-600 border-transparent hover:bg-slate-50';
+                    // derive permission key from route, e.g. admin.pages.index -> pages.read
+                    $parts = $routeName ? explode('.', $routeName) : [];
+                    $resourceKey = $parts[1] ?? null;
+                    $canView = ($routeName === 'admin.dashboard') || ($resourceKey && auth()->check() && auth()->user()->can($resourceKey . '.read'));
                 @endphp
+                @if($canView)
                 <a
                     href="{{ $url }}"
                     class="group flex items-center gap-2 sm:gap-3 rounded-lg sm:rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium transition border {{ $navClasses }}"
@@ -226,6 +262,7 @@
                     </span>
                     <span class="transition truncate" x-cloak x-show="!sidebarCollapsed">{{ $resource['label'] }}</span>
                 </a>
+                @endif
             @endforeach
         </nav>
 
