@@ -26,6 +26,7 @@
         'square-3-stack-3d' => 'bx-grid',
         'handshake' => 'bx-handshake',
         'trophy' => 'bx-trophy',
+        'heart' => 'bx-heart',
     ];
 @endphp
 
@@ -307,7 +308,17 @@
         document.querySelectorAll('a[href]').forEach((link) => {
             const href = link.getAttribute('href') || '';
             if (href.startsWith('#') || link.getAttribute('target') === '_blank') return;
-            link.addEventListener('click', () => {
+            link.addEventListener('click', (event) => {
+                if (
+                    event.defaultPrevented ||
+                    event.button !== 0 ||
+                    event.metaKey ||
+                    event.ctrlKey ||
+                    event.shiftKey ||
+                    event.altKey
+                ) {
+                    return;
+                }
                 showLoader();
             });
         });
