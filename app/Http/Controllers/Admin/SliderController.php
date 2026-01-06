@@ -11,7 +11,16 @@ class SliderController extends BaseCrudController
     protected string $model = Slider::class;
     protected string $resourceName = 'sliders';
     protected array $searchable = ['id', 'title', 'subtitle'];
-    protected array $filterable = ['is_active'];
+    protected array $filterable = [
+        'is_active' => [
+            'label' => 'الحالة',
+            'type' => 'boolean',
+            'options' => [
+                '1' => 'مفعل',
+                '0' => 'معطل',
+            ],
+        ],
+    ];
     protected array $sortable = ['id', 'title', 'created_at'];
     protected array $fileAttributes = ['img' => 'public'];
     protected array $createValidationRules = [
@@ -54,50 +63,70 @@ class SliderController extends BaseCrudController
             'middle' => 'منتصف',
             'bottom' => 'أسفل',
         ];
-
         return [
-            ['type' => 'text', 'name' => 'title', 'label' => 'العنوان الرئيسي'],
-            ['type' => 'text', 'name' => 'subtitle', 'label' => 'العنوان الفرعي'],
-            ['type' => 'textarea', 'name' => 'content', 'label' => 'النص التعريفي', 'colspan' => 2],
-            ['type' => 'text', 'name' => 'button', 'label' => 'نص الزر'],
-            ['type' => 'text', 'name' => 'url', 'label' => 'رابط الزر'],
-            ['type' => 'file', 'name' => 'img', 'label' => 'صورة الخلفية', 'colspan' => 2],
+            ['type' => 'text', 'name' => 'title', 'label' => 'عنوان السلايدر', 'group' => 'البيانات الأساسية'],
+            ['type' => 'text', 'name' => 'subtitle', 'label' => 'العنوان الفرعي', 'group' => 'البيانات الأساسية'],
+            ['type' => 'textarea', 'name' => 'content', 'label' => 'النص', 'colspan' => 2, 'group' => 'المحتوى'],
+            ['type' => 'text', 'name' => 'button', 'label' => 'نص الزر', 'group' => 'المحتوى'],
+            ['type' => 'text', 'name' => 'url', 'label' => 'رابط الزر', 'group' => 'المحتوى'],
+            ['type' => 'file', 'name' => 'img', 'label' => 'صورة السلايدر', 'colspan' => 2, 'group' => 'الوسائط'],
             [
                 'type' => 'select',
                 'name' => 'service_id',
                 'label' => 'الخدمة المرتبطة',
                 'props' => [
                     'options' => $services,
-                    'placeholder' => 'اختر الخدمة',
+                    'placeholder' => 'اختر خدمة',
                 ],
+                'group' => 'البيانات الأساسية',
             ],
             [
                 'type' => 'select',
                 'name' => 'text_align_horizontal',
                 'label' => 'محاذاة النص أفقياً',
-                'props' => ['options' => $alignOptions],
+                'props' => ['options' => [
+                    'left' => 'يسار',
+                    'center' => 'وسط',
+                    'right' => 'يمين',
+                ]],
+                'group' => 'المحاذاة',
             ],
             [
                 'type' => 'select',
                 'name' => 'text_align_vertical',
                 'label' => 'محاذاة النص عمودياً',
-                'props' => ['options' => $verticalAlign],
+                'props' => ['options' => [
+                    'top' => 'أعلى',
+                    'middle' => 'منتصف',
+                    'bottom' => 'أسفل',
+                ]],
+                'group' => 'المحاذاة',
             ],
             [
                 'type' => 'select',
                 'name' => 'button_align_horizontal',
                 'label' => 'محاذاة الزر أفقياً',
-                'props' => ['options' => $alignOptions],
+                'props' => ['options' => [
+                    'left' => 'يسار',
+                    'center' => 'وسط',
+                    'right' => 'يمين',
+                ]],
+                'group' => 'المحاذاة',
             ],
             [
                 'type' => 'select',
                 'name' => 'button_align_vertical',
                 'label' => 'محاذاة الزر عمودياً',
-                'props' => ['options' => $verticalAlign],
+                'props' => ['options' => [
+                    'top' => 'أعلى',
+                    'middle' => 'منتصف',
+                    'bottom' => 'أسفل',
+                ]],
+                'group' => 'المحاذاة',
             ],
-            ['type' => 'text', 'name' => 'text_color', 'label' => 'لون النص'],
-            ['type' => 'text', 'name' => 'button_color', 'label' => 'لون الزر'],
-            ['type' => 'toggle', 'name' => 'is_active', 'label' => 'مفعل'],
+            ['type' => 'text', 'name' => 'text_color', 'label' => 'لون النص', 'group' => 'الألوان'],
+            ['type' => 'text', 'name' => 'button_color', 'label' => 'لون الزر', 'group' => 'الألوان'],
+            ['type' => 'toggle', 'name' => 'is_active', 'label' => 'مفعّل', 'group' => 'الإعدادات'],
         ];
     }
 }

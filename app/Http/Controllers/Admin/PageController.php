@@ -11,7 +11,24 @@ class PageController extends BaseCrudController
     protected string $model = Page::class;
     protected string $resourceName = 'pages';
     protected array $searchable = ['id', 'title', 'slug'];
-    protected array $filterable = ['is_active', 'visitable'];
+    protected array $filterable = [
+        'is_active' => [
+            'label' => 'الحالة',
+            'type' => 'boolean',
+            'options' => [
+                '1' => 'مفعل',
+                '0' => 'معطل',
+            ],
+        ],
+        'visitable' => [
+            'label' => 'قابل للزيارة',
+            'type' => 'boolean',
+            'options' => [
+                '1' => 'قابل للزيارة',
+                '0' => 'غير قابل للزيارة',
+            ],
+        ],
+    ];
     protected array $sortable = ['id', 'title', 'order', 'created_at'];
     protected array $fileAttributes = ['cover' => 'public'];
     protected array $createValidationRules = [
@@ -37,31 +54,32 @@ class PageController extends BaseCrudController
     {
         $groups = PageGroup::query()->orderBy('title')->pluck('title', 'id')->toArray();
         $pages = Page::query()->orderBy('title')->pluck('title', 'id')->toArray();
-
         return [
-            ['type' => 'text', 'name' => 'title', 'label' => 'العنوان', 'colspan' => 2],
+            ['type' => 'text', 'name' => 'title', 'label' => 'عنوان الصفحة', 'colspan' => 2, 'group' => 'البيانات الأساسية'],
             [
                 'type' => 'select',
                 'name' => 'page_group_id',
                 'label' => 'مجموعة الصفحة',
                 'props' => [
                     'options' => $groups,
-                    'placeholder' => 'اختر المجموعة',
+                    'placeholder' => 'اختر مجموعة',
                 ],
+                'group' => 'البيانات الأساسية',
             ],
             [
                 'type' => 'select',
                 'name' => 'parent_id',
-                'label' => 'الصفحة الرئيسية',
+                'label' => 'الصفحة الأب',
                 'props' => [
                     'options' => $pages,
-                    'placeholder' => 'بدون',
+                    'placeholder' => 'اختر صفحة',
                 ],
+                'group' => 'البيانات الأساسية',
             ],
-            ['type' => 'file', 'name' => 'cover', 'label' => 'صورة الغلاف', 'colspan' => 2],
-            ['type' => 'text', 'name' => 'order', 'label' => 'الترتيب', 'props' => ['type' => 'number']],
-            ['type' => 'toggle', 'name' => 'is_active', 'label' => 'مفعل'],
-            ['type' => 'toggle', 'name' => 'visitable', 'label' => 'متاح للزيارة'],
+            ['type' => 'file', 'name' => 'cover', 'label' => 'صورة الغلاف', 'colspan' => 2, 'group' => 'الوسائط'],
+            ['type' => 'text', 'name' => 'order', 'label' => 'الترتيب', 'props' => ['type' => 'number'], 'group' => 'البيانات الأساسية'],
+            ['type' => 'toggle', 'name' => 'is_active', 'label' => 'مفعّلة', 'group' => 'الإعدادات'],
+            ['type' => 'toggle', 'name' => 'visitable', 'label' => 'قابلة للزيارة', 'group' => 'الإعدادات'],
         ];
     }
 }

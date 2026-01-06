@@ -9,7 +9,16 @@ class ProjectController extends BaseCrudController
     protected string $model = Project::class;
     protected string $resourceName = 'projects';
     protected array $searchable = ['id', 'title', 'client', 'location'];
-    protected array $filterable = ['is_active'];
+    protected array $filterable = [
+        'is_active' => [
+            'label' => 'الحالة',
+            'type' => 'boolean',
+            'options' => [
+                '1' => 'مفعل',
+                '0' => 'معطل',
+            ],
+        ],
+    ];
     protected array $sortable = ['id', 'title', 'date', 'created_at'];
     protected array $fileAttributes = ['cover' => 'public'];
     protected array $createValidationRules = [
@@ -34,15 +43,15 @@ class ProjectController extends BaseCrudController
         'date' => ['nullable', 'date'],
         'is_active' => ['nullable', 'boolean'],
     ];
-    protected array $formSchema = [
-        ['type' => 'text', 'name' => 'title', 'label' => 'عنوان المشروع', 'colspan' => 2],
-        ['type' => 'file', 'name' => 'cover', 'label' => 'صورة المشروع', 'colspan' => 2],
-        ['type' => 'richtext', 'name' => 'content', 'label' => 'تفاصيل المشروع', 'colspan' => 2],
-        ['type' => 'text', 'name' => 'demo', 'label' => 'رابط العرض التجريبي', 'colspan' => 2],
-        ['type' => 'text', 'name' => 'live_preview', 'label' => 'رابط المعاينة الحية', 'colspan' => 2],
-        ['type' => 'text', 'name' => 'client', 'label' => 'العميل'],
-        ['type' => 'text', 'name' => 'location', 'label' => 'الموقع'],
-        ['type' => 'text', 'name' => 'date', 'label' => 'تاريخ التنفيذ', 'props' => ['type' => 'date']],
-        ['type' => 'toggle', 'name' => 'is_active', 'label' => 'مفعل'],
+                    protected array $formSchema = [
+        ['type' => 'text', 'name' => 'title', 'label' => 'عنوان المشروع', 'colspan' => 2, 'group' => 'البيانات الأساسية'],
+        ['type' => 'file', 'name' => 'cover', 'label' => 'صورة الغلاف', 'colspan' => 2, 'group' => 'الوسائط'],
+        ['type' => 'richtext', 'name' => 'content', 'label' => 'محتوى المشروع', 'colspan' => 2, 'group' => 'المحتوى'],
+        ['type' => 'text', 'name' => 'demo', 'label' => 'رابط العرض', 'colspan' => 2, 'group' => 'الروابط'],
+        ['type' => 'text', 'name' => 'live_preview', 'label' => 'رابط المعاينة', 'colspan' => 2, 'group' => 'الروابط'],
+        ['type' => 'text', 'name' => 'client', 'label' => 'العميل', 'group' => 'البيانات الأساسية'],
+        ['type' => 'text', 'name' => 'location', 'label' => 'الموقع', 'group' => 'البيانات الأساسية'],
+        ['type' => 'text', 'name' => 'date', 'label' => 'تاريخ المشروع', 'props' => ['type' => 'date'], 'group' => 'البيانات الأساسية'],
+        ['type' => 'toggle', 'name' => 'is_active', 'label' => 'مفعّل', 'group' => 'الإعدادات'],
     ];
 }

@@ -12,7 +12,24 @@ class TestimonialController extends BaseCrudController
     protected string $model = Testimonial::class;
     protected string $resourceName = 'testimonials';
     protected array $searchable = ['id', 'name', 'company'];
-    protected array $filterable = ['is_active', 'is_featured'];
+    protected array $filterable = [
+        'is_active' => [
+            'label' => 'الحالة',
+            'type' => 'boolean',
+            'options' => [
+                '1' => 'مفعل',
+                '0' => 'معطل',
+            ],
+        ],
+        'is_featured' => [
+            'label' => 'مميز',
+            'type' => 'boolean',
+            'options' => [
+                '1' => 'مميز',
+                '0' => 'غير مميز',
+            ],
+        ],
+    ];
     protected array $sortable = ['id', 'name', 'rating', 'created_at'];
     protected array $booleanAttributes = ['is_active', 'is_featured'];
     protected array $fileAttributes = ['img' => 'public'];
@@ -41,22 +58,22 @@ class TestimonialController extends BaseCrudController
     {
         $services = Service::query()->orderBy('title')->pluck('title', 'id')->toArray();
         $projects = Project::query()->orderBy('title')->pluck('title', 'id')->toArray();
-
         return [
-            ['type' => 'text', 'name' => 'name', 'label' => 'اسم العميل'],
-            ['type' => 'text', 'name' => 'job_title', 'label' => 'المسمى الوظيفي'],
-            ['type' => 'text', 'name' => 'company', 'label' => 'الشركة'],
-            ['type' => 'file', 'name' => 'img', 'label' => 'صورة العميل'],
-            ['type' => 'textarea', 'name' => 'content', 'label' => 'نص التقييم', 'colspan' => 2],
-            ['type' => 'text', 'name' => 'rating', 'label' => 'التقييم', 'props' => ['type' => 'number', 'min' => 1, 'max' => 5]],
+            ['type' => 'text', 'name' => 'name', 'label' => 'الاسم', 'group' => 'البيانات الأساسية'],
+            ['type' => 'text', 'name' => 'job_title', 'label' => 'المسمى الوظيفي', 'group' => 'البيانات الأساسية'],
+            ['type' => 'text', 'name' => 'company', 'label' => 'الشركة', 'group' => 'البيانات الأساسية'],
+            ['type' => 'file', 'name' => 'img', 'label' => 'الصورة', 'group' => 'الوسائط'],
+            ['type' => 'textarea', 'name' => 'content', 'label' => 'النص', 'colspan' => 2, 'group' => 'المحتوى'],
+            ['type' => 'text', 'name' => 'rating', 'label' => 'التقييم', 'props' => ['type' => 'number', 'min' => 1, 'max' => 5], 'group' => 'البيانات الأساسية'],
             [
                 'type' => 'select',
                 'name' => 'service_id',
                 'label' => 'الخدمة المرتبطة',
                 'props' => [
                     'options' => $services,
-                    'placeholder' => 'اختر الخدمة',
+                    'placeholder' => 'اختر خدمة',
                 ],
+                'group' => 'الربط',
             ],
             [
                 'type' => 'select',
@@ -64,11 +81,12 @@ class TestimonialController extends BaseCrudController
                 'label' => 'المشروع المرتبط',
                 'props' => [
                     'options' => $projects,
-                    'placeholder' => 'اختر المشروع',
+                    'placeholder' => 'اختر مشروعاً',
                 ],
+                'group' => 'الربط',
             ],
-            ['type' => 'toggle', 'name' => 'is_active', 'label' => 'مفعل'],
-            ['type' => 'toggle', 'name' => 'is_featured', 'label' => 'مميز'],
+            ['type' => 'toggle', 'name' => 'is_active', 'label' => 'مفعّل', 'group' => 'الإعدادات'],
+            ['type' => 'toggle', 'name' => 'is_featured', 'label' => 'مميز', 'group' => 'الإعدادات'],
         ];
     }
 }

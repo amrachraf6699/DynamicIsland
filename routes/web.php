@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PageGroupController;
 use App\Http\Controllers\Admin\PartnerController;
 use App\Http\Controllers\Admin\PartialController;
+use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SliderController;
@@ -38,6 +39,8 @@ Route::prefix('admin')
     ->middleware('auth')
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
 
         Route::resource('page-groups', PageGroupController::class)->except(['show']);
         Route::resource('pages', PageController::class)->except(['show']);

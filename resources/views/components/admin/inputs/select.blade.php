@@ -12,7 +12,7 @@
 
 <div class="space-y-2 text-right" style="grid-column: span {{ $colspan }} / span {{ $colspan }};">
     <!-- Enhanced label styling -->
-    <label for="{{ $name }}" class="flex items-center gap-1 text-xs font-semibold tracking-widest text-slate-300 uppercase">
+    <label for="{{ $name }}" class="flex items-center gap-1 text-xs font-semibold tracking-widest text-slate-600">
         {{ $label ?? \Illuminate\Support\Str::headline($name) }}
         @if($required)
             <span class="text-rose-400">*</span>
@@ -23,9 +23,9 @@
     <select
         name="{{ $name }}{{ $multiple ? '[]' : '' }}"
         id="{{ $name }}"
-        class="js-select2 w-full rounded-xl border border-slate-700/50 bg-slate-900/30 px-0 py-3 text-sm font-medium text-white transition duration-200
-               focus:border-indigo-400/60 focus:outline-none focus:ring-2 focus:ring-indigo-400/25
-               hover:border-slate-600/70"
+        class="js-select2 w-full rounded-xl border border-slate-200 bg-white px-0 py-3 text-sm font-medium text-slate-900 transition duration-200
+               focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-300/40
+               hover:border-slate-300"
         data-placeholder="{{ $placeholder }}"
         data-allow-clear="{{ $searchable ? 'true' : 'false' }}"
         dir="rtl"
@@ -42,7 +42,7 @@
     
     <!-- Better error message styling -->
     @error($name)
-        <div class="flex items-center gap-1.5 text-xs text-rose-300 font-medium">
+        <div class="flex items-center gap-1.5 text-xs text-rose-600 font-medium">
             <i class="bx bx-x-circle text-base"></i>
             <span>{{ $message }}</span>
         </div>

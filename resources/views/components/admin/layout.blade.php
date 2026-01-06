@@ -42,6 +42,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Dropify/0.2.2/css/dropify.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.full.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Dropify/0.2.2/js/dropify.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     {{-- <script src="{{ asset('tinymce/js/tinymce/tinymce.min.js') }}" referrerpolicy="origin"></script> --}}
@@ -52,14 +53,16 @@
 
     <style>
         :root {
-            --color-primary: #6366f1;
-            --color-primary-dark: #4f46e5;
-            --color-secondary: #ec4899;
-            --color-bg: #0f172a;
-            --color-surface: #1e293b;
-            --color-border: #334155;
-            --color-text: #f1f5f9;
-            --color-text-muted: #cbd5e1;
+            --color-primary: #6f7bf7;
+            --color-primary-dark: #5a66e8;
+            --color-secondary: #22c55e;
+            --color-bg: #f6f7fb;
+            --color-surface: #ffffff;
+            --color-border: #e7eaf3;
+            --color-text: #1f2937;
+            --color-text-muted: #6b7280;
+            --color-panel: #ffffff;
+            --color-panel-soft: #f5f7ff;
         }
 
         * {
@@ -69,23 +72,22 @@
 
         body {
             font-family: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, var(--color-bg) 0%, #1a235e 100%);
+            background: radial-gradient(1200px 500px at 80% -10%, #eef1ff 0%, #f6f7fb 55%, #f9fafb 100%);
             min-height: 100vh;
             color: var(--color-text);
             overflow-x: hidden;
         }
 
         .glass-panel {
-            background: rgba(30, 41, 59, 0.8);
-            border: 1px solid rgba(99, 102, 241, 0.15);
-            backdrop-filter: blur(20px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            background: var(--color-panel);
+            border: 1px solid var(--color-border);
+            box-shadow: 0 12px 32px rgba(31, 41, 55, 0.08);
             transition: all 0.3s ease;
         }
 
         .glass-panel:hover {
-            border-color: rgba(99, 102, 241, 0.25);
-            box-shadow: 0 12px 48px rgba(99, 102, 241, 0.15);
+            border-color: rgba(111, 123, 247, 0.35);
+            box-shadow: 0 18px 40px rgba(79, 70, 229, 0.12);
         }
 
         .scroll-thin::-webkit-scrollbar {
@@ -94,23 +96,23 @@
         }
 
         .scroll-thin::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(17, 24, 39, 0.05);
         }
 
         .scroll-thin::-webkit-scrollbar-thumb {
-            background: rgba(99, 102, 241, 0.4);
+            background: rgba(111, 123, 247, 0.4);
             border-radius: 999px;
             transition: background 0.3s ease;
         }
 
         .scroll-thin::-webkit-scrollbar-thumb:hover {
-            background: rgba(99, 102, 241, 0.6);
+            background: rgba(111, 123, 247, 0.65);
         }
 
         .select2-container--default .select2-selection--single {
             border-radius: 0.75rem;
             border: 1px solid var(--color-border);
-            background-color: var(--color-surface);
+            background-color: var(--color-panel);
             color: var(--color-text);
             height: 44px;
             padding: 4px;
@@ -122,7 +124,7 @@
         }
 
         .select2-dropdown {
-            background-color: var(--color-surface);
+            background-color: var(--color-panel);
             border: 1px solid var(--color-border);
             border-radius: 0.75rem;
         }
@@ -169,39 +171,32 @@
 </head>
 <body x-data="layoutState()" x-init="init()" dir="rtl" class="antialiased">
     <!-- Mobile overlay for sidebar -->
-    <div class="fixed inset-0 z-30 bg-black/50 lg:hidden transition-opacity duration-300" 
+    <div class="fixed inset-0 z-30 bg-slate-900/40 lg:hidden transition-opacity duration-300" 
          x-show="sidebarOpen" 
          x-cloak 
          @click="sidebarOpen = false">
     </div>
 
     <!-- Loading indicator -->
-    <div class="pointer-events-none fixed inset-0 z-50 hidden items-center justify-center bg-black/70" id="global-loader">
+    <div class="pointer-events-none fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50" id="global-loader">
         <img src="{{ $loading }}" alt="جاري التحميل" class="h-20 w-20 sm:h-28 sm:w-28 animate-pulse drop-shadow-lg">
     </div>
 
     <!-- Improved responsive sidebar with better mobile handling -->
     <aside
-        class="glass-panel scroll-thin fixed inset-y-0 right-0 z-40 flex flex-col border border-white/10 transition-all duration-300 ease-out"
+        class="glass-panel scroll-thin fixed inset-y-0 right-0 z-40 flex flex-col border border-slate-200 transition-all duration-300 ease-out"
         :class="[
             sidebarOpen ? 'translate-x-0' : 'translate-x-full',
             sidebarCollapsed ? 'w-20 sm:w-24' : 'w-72 sm:w-80'
         ]"
     >
         <!-- Sidebar Header -->
-        <div class="flex items-center gap-2 sm:gap-3 border-b border-white/10 px-3 sm:px-5 py-3 sm:py-4 flex-shrink-0">
+        <div class="flex items-center gap-2 sm:gap-3 border-b border-slate-200 px-3 sm:px-5 py-3 sm:py-4 flex-shrink-0">
             <img src="{{ $logo }}" alt="شعار الإدارة" class="h-10 sm:h-12 w-10 sm:w-12 rounded-xl sm:rounded-2xl border-2 border-indigo-400 object-cover flex-shrink-0">
             <div class="flex-1 min-w-0" x-cloak x-show="!sidebarCollapsed">
-                <p class="text-xs tracking-[0.3em] text-indigo-300/80 truncate">إدارة</p>
-                <p class="text-base sm:text-lg font-semibold text-white truncate">{{ $brand['name'] ?? config('app.name') }}</p>
+                <p class="text-xs tracking-[0.3em] text-indigo-400/90 truncate">إدارة</p>
+                <p class="text-base sm:text-lg font-semibold text-slate-900 truncate">{{ $brand['name'] ?? config('app.name') }}</p>
             </div>
-            <button
-                class="rounded-lg sm:rounded-2xl bg-indigo-500/10 p-2 text-indigo-300 transition hover:bg-indigo-500/20 flex-shrink-0"
-                @click="sidebarCollapsed = !sidebarCollapsed"
-                :title="sidebarCollapsed ? 'توسيع القائمة' : 'طي القائمة'"
-            >
-                <i class="bx text-lg sm:text-xl" :class="sidebarCollapsed ? 'bx-chevrons-left' : 'bx-chevrons-right'"></i>
-            </button>
         </div>
 
         <!-- Navigation -->
@@ -217,15 +212,15 @@
                     $iconKey = $resource['icon'] ?? 'circle';
                     $iconClass = $boxIcons[$iconKey] ?? 'bx-shape-square';
                     $navClasses = $isActive
-                        ? 'bg-indigo-500/20 border-indigo-500/40 text-white shadow-inner shadow-indigo-500/20'
-                        : 'text-slate-300 border-transparent hover:bg-white/5';
+                        ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm'
+                        : 'text-slate-600 border-transparent hover:bg-slate-50';
                 @endphp
                 <a
                     href="{{ $url }}"
                     class="group flex items-center gap-2 sm:gap-3 rounded-lg sm:rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium transition border {{ $navClasses }}"
                     :class="sidebarCollapsed ? 'justify-center' : 'justify-start'"
                 >
-                    <span class="flex h-8 sm:h-10 w-8 sm:w-10 items-center justify-center rounded-lg sm:rounded-xl bg-white/5 text-indigo-300 transition group-hover:bg-indigo-500/20 flex-shrink-0">
+                    <span class="flex h-8 sm:h-10 w-8 sm:w-10 items-center justify-center rounded-lg sm:rounded-xl bg-indigo-50 text-indigo-500 transition group-hover:bg-indigo-100 flex-shrink-0">
                         <i class="bx {{ $iconClass }} text-base sm:text-xl"></i>
                     </span>
                     <span class="transition truncate" x-cloak x-show="!sidebarCollapsed">{{ $resource['label'] }}</span>
@@ -234,10 +229,14 @@
         </nav>
 
         <!-- Sidebar Footer -->
-        <div class="border-t border-white/10 px-2 sm:px-4 py-3 sm:py-4 flex-shrink-0">
-            <a href="{{ url('/') }}" target="_blank" class="flex items-center justify-center gap-2 rounded-lg sm:rounded-2xl bg-indigo-600 hover:bg-indigo-500 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-indigo-600/40 transition">
+        <div class="border-t border-slate-200 px-2 sm:px-4 py-3 sm:py-4 flex-shrink-0">
+            <a href="{{ url('/') }}" target="_blank" class="flex items-center justify-center gap-2 rounded-lg sm:rounded-2xl bg-indigo-600 hover:bg-indigo-500 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-indigo-600/20 transition">
                 <i class="bx bx-show text-base sm:text-lg"></i>
                 <span x-cloak x-show="!sidebarCollapsed" class="truncate">عرض الموقع</span>
+            </a>
+            <a href="https://wa.me/+2010631563994" target="_blank" class="mt-3 flex items-center justify-center gap-2 rounded-lg sm:rounded-2xl border border-slate-200 bg-white py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
+                <i class="bx bx-message-dots text-base sm:text-lg"></i>
+                <span x-cloak x-show="!sidebarCollapsed" class="truncate">تواصل مع المطور</span>
             </a>
         </div>
     </aside>
@@ -251,19 +250,22 @@
         <header class="flex flex-col gap-3 sm:gap-4 px-3 sm:px-6 lg:px-8 pt-3 sm:pt-4 flex-shrink-0">
             <div class="glass-panel flex items-center justify-between rounded-xl sm:rounded-2xl lg:rounded-3xl px-3 sm:px-6 py-3 sm:py-4">
                 <div class="flex items-center gap-2 sm:gap-3 min-w-0">
-                    <button class="rounded-lg sm:rounded-2xl border border-white/10 p-2 sm:p-3 text-white lg:hidden flex-shrink-0 hover:bg-white/5" 
+                    <button class="rounded-lg sm:rounded-2xl border border-slate-200 p-2 sm:p-3 text-slate-700 lg:hidden flex-shrink-0 hover:bg-slate-50" 
                             @click="sidebarOpen = !sidebarOpen">
                         <i class="bx" :class="sidebarOpen ? 'bx-x' : 'bx-menu'" style="font-size: 1.25rem;"></i>
                     </button>
                     <div class="text-right min-w-0">
-                        <p class="text-xs text-slate-400 hidden sm:block">مرحباً بك في</p>
-                        <h1 class="text-lg sm:text-2xl font-semibold text-white truncate">{{ $title }}</h1>
+                        <p class="text-xs text-slate-500 hidden sm:block">مرحباً بك في</p>
+                        <h1 class="text-lg sm:text-2xl font-semibold text-slate-900 truncate">{{ $title }}</h1>
                     </div>
                 </div>
                 <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                    <a href="{{ route('admin.profile.edit') }}" class="hidden sm:flex items-center gap-2 rounded-lg sm:rounded-2xl border border-slate-200 px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
+                        <i class="bx bx-user-circle text-base sm:text-lg"></i>
+                    </a>
                     <form method="POST" action="{{ route('logout') }}" class="hidden sm:block">
                         @csrf
-                        <button class="flex items-center gap-2 rounded-lg sm:rounded-2xl border border-white/20 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-slate-300 hover:bg-white/10 transition">
+                        <button class="flex items-center gap-2 rounded-lg sm:rounded-2xl border border-slate-200 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
                             <i class="bx bx-log-out text-base sm:text-lg"></i>
                             <span class="hidden lg:inline">تسجيل الخروج</span>
                         </button>
@@ -275,14 +277,14 @@
         <!-- Main Content Area -->
         <main class="flex-1 space-y-4 sm:space-y-6 px-3 sm:px-6 lg:px-8 py-4 sm:py-6 overflow-y-auto scroll-thin">
             @if (session('success'))
-                <div class="rounded-lg sm:rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-emerald-200 flex items-center gap-2">
+                <div class="rounded-lg sm:rounded-2xl border border-emerald-200 bg-emerald-50 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-emerald-700 flex items-center gap-2">
                     <i class="bx bx-check-circle flex-shrink-0"></i>
                     <span>{{ session('success') }}</span>
                 </div>
             @endif
 
             @if (session('error'))
-                <div class="rounded-lg sm:rounded-2xl border border-rose-400/30 bg-rose-400/10 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-rose-200 flex items-center gap-2">
+                <div class="rounded-lg sm:rounded-2xl border border-rose-200 bg-rose-50 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-rose-700 flex items-center gap-2">
                     <i class="bx bx-x-circle flex-shrink-0"></i>
                     <span>{{ session('error') }}</span>
                 </div>
@@ -295,6 +297,27 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        const loader = document.getElementById('global-loader');
+        const showLoader = () => {
+            if (!loader) return;
+            loader.classList.remove('hidden');
+            loader.classList.add('flex');
+        };
+
+        document.querySelectorAll('a[href]').forEach((link) => {
+            const href = link.getAttribute('href') || '';
+            if (href.startsWith('#') || link.getAttribute('target') === '_blank') return;
+            link.addEventListener('click', () => {
+                showLoader();
+            });
+        });
+
+        document.querySelectorAll('form').forEach((form) => {
+            form.addEventListener('submit', () => {
+                showLoader();
+            });
+        });
+
         if (window.tinymce) {
             tinymce.init({
                 selector: '.js-richtext',
@@ -302,8 +325,8 @@
                 plugins: 'link lists code table image media',
                 toolbar: 'undo redo | formatselect | bold italic underline | alignright aligncenter alignleft | bullist numlist outdent indent | link image media table | code',
                 height: 300,
-                skin: 'oxide-dark',
-                content_style: 'body { direction: rtl; font-family: Cairo, sans-serif; font-size: 14px; }',
+                skin: 'oxide',
+                content_style: 'body { direction: rtl; font-family: Cairo, sans-serif; font-size: 14px; color: #1f2937; background: #ffffff; }',
                 branding: false,
                 relative_urls: false,
                 directionality: 'rtl',
@@ -331,8 +354,26 @@
 
         document.querySelectorAll('form[data-confirm="true"]').forEach((form) => {
             form.addEventListener('submit', (event) => {
-                if (!confirm('هل أنت متأكد من تنفيذ هذه العملية؟')) {
-                    event.preventDefault();
+                event.preventDefault();
+
+                if (window.Swal) {
+                    Swal.fire({
+                        title: 'تأكيد الحذف',
+                        text: 'هل أنت متأكد من حذف هذا العنصر؟ لا يمكن التراجع.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'نعم، احذف',
+                        cancelButtonText: 'إلغاء',
+                        reverseButtons: true,
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                } else {
+                    if (confirm('هل أنت متأكد من حذف هذا العنصر؟')) {
+                        form.submit();
+                    }
                 }
             });
         });

@@ -35,7 +35,16 @@ abstract class BaseCrudController extends Controller
 
     protected array $withRelations = [];
     protected array $searchable = ['id', 'title', 'name'];
-    protected array $filterable = ['is_active'];
+    protected array $filterable = [
+        'is_active' => [
+            'label' => 'الحالة',
+            'type' => 'boolean',
+            'options' => [
+                '1' => 'مفعل',
+                '0' => 'معطل',
+            ],
+        ],
+    ];
     protected array $sortable = ['id', 'created_at', 'updated_at', 'order'];
     protected array $booleanAttributes = ['is_active', 'is_featured', 'requestable'];
     protected array $fileAttributes = [];
@@ -63,7 +72,7 @@ abstract class BaseCrudController extends Controller
             'resourceLabel' => $this->resourceLabel(),
             'items' => $items,
             'columns' => $this->getIndexColumns(),
-            'filters' => $this->filterable,
+            'filters' => $this->filterDefinitions(),
             'formSchema' => $this->formSchema,
         ]);
     }
@@ -78,6 +87,7 @@ abstract class BaseCrudController extends Controller
             'formSchema' => $this->formSchema($item),
             'item' => $item,
             'method' => 'POST',
+            'requiredFields' => $this->requiredFields($this->createValidationRules),
         ]);
     }
 
@@ -101,6 +111,7 @@ abstract class BaseCrudController extends Controller
             'formSchema' => $this->formSchema($item),
             'item' => $item,
             'method' => 'PUT',
+            'requiredFields' => $this->requiredFields($this->updateValidationRules),
         ]);
     }
 
@@ -142,7 +153,8 @@ abstract class BaseCrudController extends Controller
             });
         }
 
-        foreach ($this->filterable as $attribute) {
+        foreach ($this->filterDefinitions() as $filter) {
+            $attribute = $filter['key'];
             if ($request->filled($attribute)) {
                 $query->where($attribute, $request->input($attribute));
             }
@@ -290,5 +302,53 @@ abstract class BaseCrudController extends Controller
     protected function formSchema(?Model $item = null): array
     {
         return $this->formSchema;
+    }
+
+    protected function filterDefinitions(): array
+    {
+        $definitions = [];
+
+        foreach ($this->filterable as $key => $value) {
+            if (is_string($value)) {
+                $definitions[] = [
+                    'key' => $value,
+                    'label' => $value,
+                    'type' => 'text',
+                    'options' => [],
+                ];
+                continue;
+            }
+
+            if (is_array($value)) {
+                $definitions[] = [
+                    'key' => $key,
+                    'label' => $value['label'] ?? $key,
+                    'type' => $value['type'] ?? 'text',
+                    'options' => $value['options'] ?? [],
+                ];
+            }
+        }
+
+        return $definitions;
+    }
+
+    protected function requiredFields(array $rules): array
+    {
+        $required = [];
+
+        foreach ($rules as $attribute => $rule) {
+            if (is_string($rule)) {
+                $segments = explode('|', $rule);
+                if (in_array('required', $segments, true)) {
+                    $required[] = $attribute;
+                }
+            } elseif (is_array($rule)) {
+                if (in_array('required', $rule, true)) {
+                    $required[] = $attribute;
+                }
+            }
+        }
+
+        return $required;
     }
 }

@@ -9,7 +9,35 @@ class JobPostingController extends BaseCrudController
     protected string $model = JobPosting::class;
     protected string $resourceName = 'job-postings';
     protected array $searchable = ['id', 'title', 'department', 'location'];
-    protected array $filterable = ['is_active', 'is_featured', 'employment_type'];
+    protected array $filterable = [
+        'is_active' => [
+            'label' => 'الحالة',
+            'type' => 'boolean',
+            'options' => [
+                '1' => 'مفعل',
+                '0' => 'معطل',
+            ],
+        ],
+        'is_featured' => [
+            'label' => 'مميز',
+            'type' => 'boolean',
+            'options' => [
+                '1' => 'مميز',
+                '0' => 'غير مميز',
+            ],
+        ],
+        'employment_type' => [
+            'label' => 'نوع الدوام',
+            'type' => 'select',
+            'options' => [
+                'full_time' => 'دوام كامل',
+                'part_time' => 'دوام جزئي',
+                'contract' => 'عقد',
+                'internship' => 'تدريب',
+                'freelance' => 'عمل حر',
+            ],
+        ],
+    ];
     protected array $sortable = ['id', 'title', 'created_at'];
     protected array $booleanAttributes = ['is_active', 'is_featured'];
     protected array $createValidationRules = [
@@ -38,10 +66,10 @@ class JobPostingController extends BaseCrudController
         'salary_max' => ['nullable', 'numeric', 'min:0'],
         'currency' => ['nullable', 'string', 'max:10'],
     ];
-    protected array $formSchema = [
-        ['type' => 'text', 'name' => 'title', 'label' => 'عنوان الوظيفة', 'colspan' => 2],
-        ['type' => 'text', 'name' => 'department', 'label' => 'القسم'],
-        ['type' => 'text', 'name' => 'location', 'label' => 'الموقع'],
+                    protected array $formSchema = [
+        ['type' => 'text', 'name' => 'title', 'label' => 'المسمى الوظيفي', 'colspan' => 2, 'group' => 'البيانات الأساسية'],
+        ['type' => 'text', 'name' => 'department', 'label' => 'القسم', 'group' => 'البيانات الأساسية'],
+        ['type' => 'text', 'name' => 'location', 'label' => 'الموقع', 'group' => 'البيانات الأساسية'],
         [
             'type' => 'select',
             'name' => 'employment_type',
@@ -55,18 +83,19 @@ class JobPostingController extends BaseCrudController
                     'freelance' => 'عمل حر',
                 ],
             ],
+            'group' => 'البيانات الأساسية',
         ],
-        ['type' => 'textarea', 'name' => 'description', 'label' => 'وصف الوظيفة', 'colspan' => 2],
-        ['type' => 'textarea', 'name' => 'requirements', 'label' => 'متطلبات الوظيفة', 'colspan' => 2],
-        ['type' => 'textarea', 'name' => 'responsibilities', 'label' => 'المسؤوليات', 'colspan' => 2],
-        ['type' => 'text', 'name' => 'experience_level', 'label' => 'سنوات الخبرة'],
-        ['type' => 'text', 'name' => 'salary_min', 'label' => 'الراتب الأدنى', 'props' => ['type' => 'number', 'step' => '0.01']],
-        ['type' => 'text', 'name' => 'salary_max', 'label' => 'الراتب الأعلى', 'props' => ['type' => 'number', 'step' => '0.01']],
-        ['type' => 'text', 'name' => 'currency', 'label' => 'العملة', 'colspan' => 1],
-        ['type' => 'toggle', 'name' => 'is_active', 'label' => 'مفعل'],
-        ['type' => 'toggle', 'name' => 'is_featured', 'label' => 'مميز'],
-        ['type' => 'text', 'name' => 'meta_title', 'label' => 'عنوان السيو', 'colspan' => 2],
-        ['type' => 'textarea', 'name' => 'meta_description', 'label' => 'وصف السيو', 'colspan' => 2],
-        ['type' => 'text', 'name' => 'meta_keywords', 'label' => 'كلمات مفتاحية', 'colspan' => 2],
+        ['type' => 'textarea', 'name' => 'description', 'label' => 'الوصف', 'colspan' => 2, 'group' => 'الوصف والمتطلبات'],
+        ['type' => 'textarea', 'name' => 'requirements', 'label' => 'المتطلبات', 'colspan' => 2, 'group' => 'الوصف والمتطلبات'],
+        ['type' => 'textarea', 'name' => 'responsibilities', 'label' => 'المسؤوليات', 'colspan' => 2, 'group' => 'الوصف والمتطلبات'],
+        ['type' => 'text', 'name' => 'experience_level', 'label' => 'مستوى الخبرة', 'group' => 'الخبرة والراتب'],
+        ['type' => 'text', 'name' => 'salary_min', 'label' => 'الحد الأدنى للراتب', 'props' => ['type' => 'number', 'step' => '0.01'], 'group' => 'الخبرة والراتب'],
+        ['type' => 'text', 'name' => 'salary_max', 'label' => 'الحد الأعلى للراتب', 'props' => ['type' => 'number', 'step' => '0.01'], 'group' => 'الخبرة والراتب'],
+        ['type' => 'text', 'name' => 'currency', 'label' => 'العملة', 'colspan' => 1, 'group' => 'الخبرة والراتب'],
+        ['type' => 'toggle', 'name' => 'is_active', 'label' => 'مفعّل', 'group' => 'الإعدادات'],
+        ['type' => 'toggle', 'name' => 'is_featured', 'label' => 'مميز', 'group' => 'الإعدادات'],
+        ['type' => 'text', 'name' => 'meta_title', 'label' => 'عنوان الميتا', 'colspan' => 2, 'group' => 'تهيئة محركات البحث'],
+        ['type' => 'textarea', 'name' => 'meta_description', 'label' => 'وصف الميتا', 'colspan' => 2, 'group' => 'تهيئة محركات البحث'],
+        ['type' => 'text', 'name' => 'meta_keywords', 'label' => 'كلمات الميتا المفتاحية', 'colspan' => 2, 'group' => 'تهيئة محركات البحث'],
     ];
 }

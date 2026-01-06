@@ -14,7 +14,7 @@
 
 <div class="space-y-2 text-right" style="grid-column: span {{ $colspan }} / span {{ $colspan }};">
     <!-- Enhanced label styling -->
-    <label for="{{ $name }}" class="flex items-center gap-1 text-xs font-semibold tracking-widest text-slate-300 uppercase">
+    <label for="{{ $name }}" class="flex items-center gap-1 text-xs font-semibold tracking-widest text-slate-600">
         {{ $label ?? \Illuminate\Support\Str::headline($name) }}
         @if($required)
             <span class="text-rose-400">*</span>
@@ -37,7 +37,7 @@
     
     <!-- Better error message styling -->
     @error($name)
-        <div class="flex items-center gap-1.5 text-xs text-rose-300 font-medium">
+        <div class="flex items-center gap-1.5 text-xs text-rose-600 font-medium">
             <i class="bx bx-x-circle text-base"></i>
             <span>{{ $message }}</span>
         </div>
@@ -45,9 +45,9 @@
     
     <!-- File removal checkbox with improved styling -->
     @if ($value)
-        <label class="mt-3 inline-flex items-center gap-3 rounded-lg border border-slate-700/50 bg-slate-900/30 px-4 py-3 hover:bg-slate-900/50 transition cursor-pointer">
+        <label class="mt-3 inline-flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 hover:bg-white transition cursor-pointer">
             <input type="checkbox" name="remove_{{ $name }}" value="1" class="h-4 w-4 rounded accent-rose-400 cursor-pointer">
-            <span class="text-xs font-medium text-slate-300">حذف الملف الحالي</span>
+            <span class="text-xs font-medium text-slate-600">حذف الملف الحالي</span>
         </label>
     @endif
 </div>

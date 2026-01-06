@@ -27,7 +27,6 @@ class PartialController extends BaseCrudController
     protected function formSchema(?Model $item = null): array
     {
         $pages = Page::query()->orderBy('title')->pluck('title', 'id')->toArray();
-
         return [
             [
                 'type' => 'select',
@@ -35,11 +34,12 @@ class PartialController extends BaseCrudController
                 'label' => 'الصفحة',
                 'props' => [
                     'options' => $pages,
-                    'placeholder' => 'اختر الصفحة',
+                    'placeholder' => 'اختر صفحة',
                 ],
+                'group' => 'البيانات الأساسية',
             ],
-            ['type' => 'text', 'name' => 'title', 'label' => 'العنوان'],
-            ['type' => 'richtext', 'name' => 'content', 'label' => 'المحتوى', 'colspan' => 2],
+            ['type' => 'text', 'name' => 'title', 'label' => 'العنوان', 'group' => 'البيانات الأساسية'],
+            ['type' => 'richtext', 'name' => 'content', 'label' => 'المحتوى', 'colspan' => 2, 'group' => 'المحتوى'],
         ];
     }
 }
