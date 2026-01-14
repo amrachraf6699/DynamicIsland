@@ -4,8 +4,18 @@
 
 @php
     use Illuminate\Support\Facades\Route;
+    use Illuminate\Support\Str;
 
     $brand = config('admin.brand', []);
+    $websiteSettings = config('settings.website', []);
+    $colors = array_merge([
+        'primary' => '#6f7bf7',
+        'primary_dark' => '#5a66e8',
+        'secondary' => '#22c55e',
+        'accent' => '#0ea5e9',
+        'surface' => '#f6f7fb',
+        'text' => '#1f2937',
+    ], $websiteSettings['colors'] ?? []);
     $resources = collect(config('admin.resources', []))
         ->filter(function ($resource) {
             $routeName = $resource['route'] ?? null;
@@ -21,8 +31,9 @@
         })
         ->values()
         ->all();
-    $logo = asset($brand['logo'] ?? 'logo.png');
-    $loading = asset($brand['loading'] ?? 'loading.gif');
+    $logoSource = $brand['logo'];
+    $logo = Str::startsWith($logoSource, ['http://', 'https://']) ? $logoSource : asset($logoSource);
+    $favicon = $websiteSettings['favicon_url'] ?? null;
     $boxIcons = [
         'home' => 'bx-home-alt-2',
         'rectangle-group' => 'bx-category-alt',
@@ -41,6 +52,7 @@
         'handshake' => 'bx-handshake',
         'trophy' => 'bx-trophy',
         'heart' => 'bx-heart',
+        'envelope-open' => 'bx-envelope'
     ];
 @endphp
 
@@ -65,19 +77,23 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+    @if($faviconHref = $favicon ? (Str::startsWith($favicon, ['http://', 'https://']) ? $favicon : asset(ltrim($favicon, '/'))) : null)
+        <link rel="icon" type="image/png" href="{{ $faviconHref }}">
+    @endif
 
     <style>
         :root {
-            --color-primary: #6f7bf7;
-            --color-primary-dark: #5a66e8;
-            --color-secondary: #22c55e;
-            --color-bg: #f6f7fb;
-            --color-surface: #ffffff;
+            --color-primary: {{ $colors['primary'] }};
+            --color-primary-dark: {{ $colors['primary_dark'] }};
+            --color-secondary: {{ $colors['secondary'] }};
+            --color-accent: {{ $colors['accent'] }};
+            --color-bg: {{ $colors['surface'] }};
+            --color-surface: {{ $colors['surface'] }};
             --color-border: #e7eaf3;
-            --color-text: #1f2937;
+            --color-text: {{ $colors['text'] }};
             --color-text-muted: #6b7280;
             --color-panel: #ffffff;
-            --color-panel-soft: #f5f7ff;
+            --color-panel-soft: {{ $colors['surface'] }};
         }
 
         * {
@@ -87,7 +103,7 @@
 
         body {
             font-family: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-            background: radial-gradient(1200px 500px at 80% -10%, #eef1ff 0%, #f6f7fb 55%, #f9fafb 100%);
+            background: radial-gradient(1200px 500px at 80% -10%, color-mix(in srgb, var(--color-primary) 20%, transparent) 0%, var(--color-bg) 55%, #f9fafb 100%);
             min-height: 100vh;
             color: var(--color-text);
             overflow-x: hidden;
@@ -101,8 +117,8 @@
         }
 
         .glass-panel:hover {
-            border-color: rgba(111, 123, 247, 0.35);
-            box-shadow: 0 18px 40px rgba(79, 70, 229, 0.12);
+            border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+            box-shadow: 0 18px 40px color-mix(in srgb, var(--color-primary-dark) 25%, transparent);
         }
 
         .scroll-thin::-webkit-scrollbar {
@@ -115,13 +131,13 @@
         }
 
         .scroll-thin::-webkit-scrollbar-thumb {
-            background: rgba(111, 123, 247, 0.4);
+            background: color-mix(in srgb, var(--color-primary) 40%, transparent);
             border-radius: 999px;
             transition: background 0.3s ease;
         }
 
         .scroll-thin::-webkit-scrollbar-thumb:hover {
-            background: rgba(111, 123, 247, 0.65);
+            background: color-mix(in srgb, var(--color-primary) 65%, transparent);
         }
 
         .select2-container--default .select2-selection--single {
@@ -150,6 +166,7 @@
 
         .select2-results__option--highlighted {
             background-color: var(--color-primary) !important;
+            color: #fff;
         }
 
         [x-cloak] {
@@ -195,7 +212,7 @@
 
     <!-- Loading indicator -->
     <div class="pointer-events-none fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50" id="global-loader">
-        <img src="{{ $loading }}" alt="جاري التحميل" class="h-20 w-20 sm:h-28 sm:w-28 animate-pulse drop-shadow-lg">
+        <img src="{{ asset('loading.gif') }}" alt="جاري التحميل" class="h-20 sm:h-28 animate-pulse drop-shadow-lg">
     </div>
 
     <!-- Improved responsive sidebar with better mobile handling -->
@@ -208,7 +225,26 @@
     >
         <!-- Sidebar Header -->
         <div class="flex items-center gap-2 sm:gap-3 border-b border-white/10 px-3 sm:px-5 py-3 sm:py-4 flex-shrink-0">
-            <img src="{{ $logo }}" alt="شعار الإدارة" class="h-10 sm:h-12 w-10 sm:w-12 rounded-xl sm:rounded-2xl border-2 border-indigo-400 object-cover flex-shrink-0">
+            <!-- Logo container with Venn diagram union effect -->
+            <div class="flex items-center flex-shrink-0" style="margin-right: -8px;">
+                <!-- Base logo (always visible) -->
+                <img 
+                    src="{{ asset('logo.png') }}" 
+                    alt="الشعار الأساسي" 
+                    class="h-10 sm:h-12 w-10 sm:w-12 rounded-full border-2 border-indigo-400 object-cover shadow-md relative z-10"
+                >
+                
+                <!-- Settings logo (if available) - overlapping to create union -->
+                @if(!empty($brand['logo']) && $brand['logo'] !== 'logo.png')
+                    <img 
+                        src="{{ $logo }}" 
+                        alt="شعار الإدارة" 
+                        class="h-10 sm:h-12 w-10 sm:w-12 rounded-full border-2 border-indigo-400 object-cover shadow-md relative z-0"
+                        style="margin-right: -20px;"
+                    >
+                @endif
+            </div>
+            
             <div class="flex-1 min-w-0" x-cloak x-show="!sidebarCollapsed">
                 <p class="text-xs tracking-[0.3em] text-black truncate">إدارة</p>
                 <p class="text-base sm:text-lg font-semibold text-indigo-700 truncate">{{ $brand['name'] ?? config('app.name') }}</p>
@@ -228,7 +264,6 @@
                     :class="sidebarCollapsed ? 'bx-chevrons-left' : 'bx-chevrons-right'"
                 ></i>
             </button>
-
         </div>
 
         <!-- Navigation -->
@@ -272,7 +307,7 @@
                 <i class="bx bx-show text-base sm:text-lg"></i>
                 <span x-cloak x-show="!sidebarCollapsed" class="truncate">عرض الموقع</span>
             </a>
-            <a href="https://wa.me/+2010631563994" target="_blank" class="mt-3 flex items-center justify-center gap-2 rounded-lg sm:rounded-2xl border border-slate-200 bg-white py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
+            <a href="https://wa.me/+201063153994" target="_blank" class="mt-3 flex items-center justify-center gap-2 rounded-lg sm:rounded-2xl border border-slate-200 bg-white py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
                 <i class="bx bx-message-dots text-base sm:text-lg"></i>
                 <span x-cloak x-show="!sidebarCollapsed" class="truncate">تواصل مع المطور</span>
             </a>
@@ -297,7 +332,66 @@
                         <h1 class="text-lg sm:text-2xl font-semibold text-slate-900 truncate">{{ $title }}</h1>
                     </div>
                 </div>
-                <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0" x-data="{openSettings:false, openSecurity:false}" @click.away="openSettings=false; openSecurity=false">
+                    @php
+                        $canAnySettings = auth()->check() && (
+                            auth()->user()->can('settings.analytics.update') ||
+                            auth()->user()->can('settings.contact.update') ||
+                            auth()->user()->can('settings.mail.update') ||
+                            auth()->user()->can('settings.social.update') ||
+                            auth()->user()->can('settings.notifications.update') ||
+                            auth()->user()->can('settings.website.update')
+                        );
+                        $settingsLinks = [
+                            ['key' => 'analytics', 'label' => 'تحليلات', 'perm' => 'settings.analytics.update'],
+                            ['key' => 'contact', 'label' => 'التواصل', 'perm' => 'settings.contact.update'],
+                            ['key' => 'mail', 'label' => 'البريد (SMTP)', 'perm' => 'settings.mail.update'],
+                            ['key' => 'social', 'label' => 'وسائل التواصل', 'perm' => 'settings.social.update'],
+                            ['key' => 'notifications', 'label' => 'الإشعارات', 'perm' => 'settings.notifications.update'],
+                            ['key' => 'website', 'label' => 'هوية الموقع', 'perm' => 'settings.website.update'],
+                        ];
+                    @endphp
+                    @if($canAnySettings)
+                    <div class="relative">
+                        <button class="hidden sm:flex items-center gap-2 rounded-lg sm:rounded-2xl border border-slate-200 px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-50 transition" @click="openSettings=!openSettings" title="الإعدادات">
+                            <i class="bx bx-cog text-base sm:text-lg"></i>
+                        </button>
+                        <div x-cloak x-show="openSettings" class="absolute left-0 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-lg z-20">
+                            @foreach($settingsLinks as $link)
+                                @can($link['perm'])
+                                <a href="{{ route('admin.settings.edit', $link['key']) }}" class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">{{ $link['label'] }}</a>
+                                @endcan
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+
+                    @php
+                        $canSecurity = auth()->check() && (auth()->user()->can('roles.read') || auth()->user()->can('users.read'));
+                    @endphp
+                    @if($canSecurity)
+                    <div class="relative">
+                        <button class="hidden sm:flex items-center gap-2 rounded-lg sm:rounded-2xl border border-slate-200 px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-50 transition" @click="openSecurity=!openSecurity" title="إدارة الصلاحيات">
+                            <i class="bx bx-shield text-base sm:text-lg"></i>
+                        </button>
+                        <div x-cloak x-show="openSecurity" class="absolute left-0 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-lg z-20">
+                            @can('roles.read')
+                                @if (Route::has('admin.roles.index'))
+                                    <a href="{{ route('admin.roles.index') }}" class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">الأدوار</a>
+                                    @else
+                                    <span class="block rounded-lg px-3 py-2 text-sm text-slate-400">الأدوار</span>
+                                    @endif
+                            @endcan
+                            @can('users.read')
+                                @if (Route::has('admin.users.index'))
+                                    <a href="{{ route('admin.users.index') }}" class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">المستخدمون</a>
+                                    @else
+                                    <span class="block rounded-lg px-3 py-2 text-sm text-slate-400">المستخدمون</span>
+                                    @endif
+                            @endcan
+                        </div>
+                    </div>
+                    @endif
                     <a href="{{ route('admin.profile.edit') }}" class="hidden sm:flex items-center gap-2 rounded-lg sm:rounded-2xl border border-slate-200 px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">
                         <i class="bx bx-user-circle text-base sm:text-lg"></i>
                     </a>
@@ -328,8 +422,30 @@
                 </div>
             @endif
 
+            @if ($errors->any())
+                <div class="rounded-lg sm:rounded-2xl border border-amber-200 bg-amber-50 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-amber-700 space-y-1">
+                    <div class="flex items-center gap-2">
+                        <i class="bx bx-error-circle flex-shrink-0"></i>
+                        <span>الرجاء تصحيح الأخطاء التالية:</span>
+                    </div>
+                    <ul class="list-disc pr-5">
+                        @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             {{ $slot }}
         </main>
+        <footer class="mt-4 bg-white/20 backdrop-blur border-t border-slate-200 sticky bottom-0 inset-x-0 z-20 rounded-t-full">
+            <div class="mx-auto flex max-w-5xl items-center justify-center gap-2 px-4 py-3 text-xs sm:text-sm text-slate-500" dir="ltr">
+                <span>Made with</span>
+                <span class="text-rose-500" role="img" aria-label="love">❤️</span>
+                <span>By</span>
+                <a href="https://wa.me/+201063153994" class="font-bold text-slate-700 hover:text-indigo-600 underline" target="_blank" rel="noopener noreferrer">Amr Achraf</a>
+            </div>
+        </footer>
     </div>
 </body>
 
@@ -341,10 +457,40 @@
             loader.classList.remove('hidden');
             loader.classList.add('flex');
         };
+        const hideLoader = () => {
+            if (!loader) return;
+            loader.classList.remove('flex');
+            loader.classList.add('hidden');
+        };
+
+        // Ensure loader is hidden on initial render and when coming from bfcache
+        hideLoader();
+        window.addEventListener('load', hideLoader);
+        window.addEventListener('pageshow', (e) => {
+            if (e.persisted) hideLoader();
+        });
+
+        // Helper to decide if we should show loader for a link
+        const shouldShowForLink = (link) => {
+            const href = (link.getAttribute('href') || '').trim();
+            if (!href || href.startsWith('#')) return false;
+            if (link.getAttribute('target') === '_blank') return false;
+            if (link.hasAttribute('download')) return false;
+            if (link.dataset.noLoader === 'true') return false;
+            const lower = href.toLowerCase();
+            if (lower.startsWith('mailto:') || lower.startsWith('tel:') || lower.startsWith('javascript:')) return false;
+            try {
+                const url = new URL(href, window.location.href);
+                if (url.origin !== window.location.origin) return false;
+            } catch (_) {
+                // If URL parsing fails, be conservative and skip
+                return false;
+            }
+            return true;
+        };
 
         document.querySelectorAll('a[href]').forEach((link) => {
-            const href = link.getAttribute('href') || '';
-            if (href.startsWith('#') || link.getAttribute('target') === '_blank') return;
+            if (!shouldShowForLink(link)) return;
             link.addEventListener('click', (event) => {
                 if (
                     event.defaultPrevented ||
@@ -357,14 +503,33 @@
                     return;
                 }
                 showLoader();
-            });
+                // Safety: auto-hide if navigation is blocked within 10s
+                setTimeout(hideLoader, 10000);
+            }, { passive: true });
         });
 
         document.querySelectorAll('form').forEach((form) => {
-            form.addEventListener('submit', () => {
+            form.addEventListener('submit', (e) => {
+                if (window.tinymce && typeof window.tinymce.triggerSave === 'function') {
+                    try {
+                        window.tinymce.triggerSave();
+                    } catch (_) { /* noop */ }
+                }
+                if (form.getAttribute('target') === '_blank') return;
+                if (form.dataset.noLoader === 'true') return;
+                if (form.hasAttribute('data-confirm')) return;
                 showLoader();
+                // Safety fallback
+                setTimeout(hideLoader, 10000);
             });
         });
+
+        // Hook into jQuery ajax if available for global loader
+        if (window.jQuery) {
+            try {
+                jQuery(document).ajaxStart(showLoader).ajaxStop(hideLoader).ajaxError(hideLoader);
+            } catch (_) { /* noop */ }
+        }
 
         if (window.tinymce) {
             tinymce.init({
@@ -379,6 +544,17 @@
                 relative_urls: false,
                 directionality: 'rtl',
                 language: 'ar',
+                setup: (editor) => {
+                    const save = () => {
+                        try {
+                            editor.save();
+                        } catch (_) {
+                            // ignore
+                        }
+                    };
+                    editor.on('change input keyup', save);
+                    editor.on('blur', save);
+                },
             });
         }
 
@@ -404,27 +580,36 @@
             form.addEventListener('submit', (event) => {
                 event.preventDefault();
 
+                const proceed = () => {
+                    showLoader();
+                    setTimeout(hideLoader, 10000);
+                    form.submit();
+                };
+
                 if (window.Swal) {
                     Swal.fire({
-                        title: 'تأكيد الحذف',
-                        text: 'هل أنت متأكد من حذف هذا العنصر؟ لا يمكن التراجع.',
+                        title: "هل أنت متأكد من حذف هذا العنصر؟",
+                        text: "لن تتمكن من استعادة هذا العنصر بعد حذفه.",
                         icon: 'warning',
                         showCancelButton: true,
-                        confirmButtonText: 'نعم، احذف',
-                        cancelButtonText: 'إلغاء',
+                        confirmButtonText: "نعم، احذف",
+                        cancelButtonText: "إلغاء",
                         reverseButtons: true,
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            form.submit();
+                            proceed();
+                        } else {
+                            hideLoader();
                         }
                     });
+                } else if (confirm("هل أنت متأكد من حذف هذا العنصر؟")) {
+                    proceed();
                 } else {
-                    if (confirm('هل أنت متأكد من حذف هذا العنصر؟')) {
-                        form.submit();
-                    }
+                    hideLoader();
                 }
             });
         });
+
     });
 </script>
 </html>

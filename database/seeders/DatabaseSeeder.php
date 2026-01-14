@@ -27,5 +27,17 @@ class DatabaseSeeder extends Seeder
 
         // Seed roles and permissions (creates Super-Admin and grants all permissions)
         $this->call(RolesAndPermissionsSeeder::class);
+
+        // Seed default settings groups/keys
+        $this->call(SettingsSeeder::class);
+
+        // Seed contacts demo data
+        $this->call(ContactSeeder::class);
+
+        // Seed services and sample requests
+        $this->call(ServiceSeeder::class);
+
+        // Seed newsletter subscribers
+        $this->call(NewsletterSeeder::class);
     }
 }

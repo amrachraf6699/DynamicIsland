@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Service;
+use Illuminate\Contracts\Support\Renderable;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 
 class ServiceController extends BaseCrudController
 {
@@ -13,26 +16,17 @@ class ServiceController extends BaseCrudController
         'is_active' => [
             'label' => 'الحالة',
             'type' => 'boolean',
-            'options' => [
-                '1' => 'مفعل',
-                '0' => 'معطل',
-            ],
+            'options' => ['1' => 'مفعل', '0' => 'معطل'],
         ],
         'featured' => [
-            'label' => 'مميز',
+            'label' => 'مميزة',
             'type' => 'boolean',
-            'options' => [
-                '1' => 'مميز',
-                '0' => 'غير مميز',
-            ],
+            'options' => ['1' => 'مميزة', '0' => 'عادية'],
         ],
         'requestable' => [
-            'label' => 'قابل للطلب',
+            'label' => 'قابلة للطلب',
             'type' => 'boolean',
-            'options' => [
-                '1' => 'قابل للطلب',
-                '0' => 'غير قابل للطلب',
-            ],
+            'options' => ['1' => 'نعم', '0' => 'لا'],
         ],
     ];
     protected array $sortable = ['id', 'title', 'created_at'];
@@ -62,16 +56,39 @@ class ServiceController extends BaseCrudController
         'meta_description' => ['nullable', 'string', 'max:1000'],
         'meta_keywords' => ['nullable', 'string', 'max:255'],
     ];
-        protected array $formSchema = [
-        ['type' => 'text', 'name' => 'title', 'label' => 'عنوان الخدمة', 'colspan' => 2, 'group' => 'البيانات الأساسية'],
-        ['type' => 'file', 'name' => 'cover', 'label' => 'صورة الغلاف', 'colspan' => 2, 'group' => 'الوسائط'],
-        ['type' => 'richtext', 'name' => 'content', 'label' => 'محتوى الخدمة', 'colspan' => 2, 'group' => 'المحتوى'],
-        ['type' => 'text', 'name' => 'delivery_days', 'label' => 'مدة التسليم (بالأيام)', 'props' => ['type' => 'number'], 'group' => 'البيانات الأساسية'],
+    protected array $formSchema = [
+        ['type' => 'text', 'name' => 'title', 'label' => 'عنوان الخدمة', 'colspan' => 2, 'group' => 'بيانات عامة'],
+        ['type' => 'file', 'name' => 'cover', 'label' => 'صورة الخدمة', 'colspan' => 2, 'group' => 'الوسائط'],
+        ['type' => 'richtext', 'name' => 'content', 'label' => 'وصف الخدمة', 'colspan' => 2, 'group' => 'بيانات عامة'],
+        ['type' => 'text', 'name' => 'delivery_days', 'label' => 'أيام التسليم', 'props' => ['type' => 'number'], 'group' => 'بيانات عامة'],
         ['type' => 'toggle', 'name' => 'featured', 'label' => 'مميزة', 'group' => 'الإعدادات'],
         ['type' => 'toggle', 'name' => 'requestable', 'label' => 'قابلة للطلب', 'group' => 'الإعدادات'],
-        ['type' => 'toggle', 'name' => 'is_active', 'label' => 'مفعّلة', 'group' => 'الإعدادات'],
-        ['type' => 'text', 'name' => 'meta_title', 'label' => 'عنوان الميتا', 'colspan' => 2, 'group' => 'تهيئة محركات البحث'],
-        ['type' => 'textarea', 'name' => 'meta_description', 'label' => 'وصف الميتا', 'colspan' => 2, 'group' => 'تهيئة محركات البحث'],
-        ['type' => 'text', 'name' => 'meta_keywords', 'label' => 'كلمات الميتا المفتاحية', 'colspan' => 2, 'group' => 'تهيئة محركات البحث'],
+        ['type' => 'toggle', 'name' => 'is_active', 'label' => 'الحالة', 'group' => 'الإعدادات'],
+        ['type' => 'text', 'name' => 'meta_title', 'label' => 'عنوان الميتا', 'colspan' => 2, 'group' => 'تحسين محركات البحث'],
+        ['type' => 'textarea', 'name' => 'meta_description', 'label' => 'وصف الميتا', 'colspan' => 2, 'group' => 'تحسين محركات البحث'],
+        ['type' => 'text', 'name' => 'meta_keywords', 'label' => 'كلمات مفتاحية', 'colspan' => 2, 'group' => 'تحسين محركات البحث'],
     ];
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->middleware('can:' . $this->permissionName('read'))->only('show');
+    }
+
+    protected function buildIndexQuery(Request $request): Builder
+    {
+        return parent::buildIndexQuery($request)
+            ->withCount(['serviceRequests as requests_count']);
+    }
+
+    public function show(Service $service): Renderable
+    {
+        $service->loadCount('serviceRequests');
+        $requests = $service->serviceRequests()
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('admin.services.show', compact('service', 'requests'));
+    }
 }

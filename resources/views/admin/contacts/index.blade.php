@@ -1,30 +1,12 @@
 ﻿@php
-$title = $resourceLabel ?? 'الموارد';
-$actions = $actions ?? [
-    ['label' => 'تعديل', 'type' => 'link', 'route' => "admin.$resourceName.edit"],
+$title = $resourceLabel ?? 'العناصر';
+$actions = [
+    ['label' => 'رد', 'type' => 'link', 'route' => "admin.$resourceName.reply", 'variant' => 'primary'],
     ['label' => 'حذف', 'type' => 'delete', 'route' => "admin.$resourceName.destroy"],
 ];
 $bulkRoute = null;
-if (Route::has('admin.' . $resourceName . '.bulk-destroy') && auth()->user()?->can($resourceName . '.delete')) {
-    $bulkRoute = route('admin.' . $resourceName . '.bulk-destroy');
-}
-if ($resourceName === 'services') {
-    array_unshift($actions, [
-        'label' => 'تفاصيل الخدمة',
-        'type' => 'link',
-        'route' => 'admin.services.show',
-        'variant' => 'primary',
-        'ability' => 'read',
-    ]);
-}
-$defaultCreateRoute = Route::has('admin.' . $resourceName . '.create') ? route('admin.' . $resourceName . '.create') : null;
-$createButtonConfig = $createButton ?? [];
-if (empty($createButtonConfig) && $defaultCreateRoute) {
-    $createButtonConfig = [
-        'route' => $defaultCreateRoute,
-        'label' => 'إضافة ' . $title,
-        'ability' => $resourceName . '.create',
-    ];
+if (Route::has('admin.contacts.bulk-destroy') && auth()->user()?->can('contacts.delete')) {
+    $bulkRoute = route('admin.contacts.bulk-destroy');
 }
 @endphp
 
@@ -65,7 +47,7 @@ if (empty($createButtonConfig) && $defaultCreateRoute) {
             <div class="min-w-[10rem] shrink-0">
                 <label class="mb-2 block text-xs font-semibold text-slate-600">{{ $label }}</label>
                 <input type="{{ $type }}" name="{{ $name }}" value="{{ request($name) }}"
-                    placeholder="{{ $filter['placeholder'] ?? ('اكتب ' . $label . '...') }}"
+                    placeholder="{{ $filter['placeholder'] ?? ('ابحث عن ' . $label . '...') }}"
                     class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-300/40"
                     dir="rtl">
             </div>
@@ -74,7 +56,7 @@ if (empty($createButtonConfig) && $defaultCreateRoute) {
 
             <button type="button"
                 class="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 transition hover:border-rose-200 hover:text-rose-600"
-                data-filter-reset aria-label="إعادة تعيين الفلاتر" title="إعادة تعيين">
+                data-filter-reset aria-label="إعادة ضبط عوامل التصفية" title="إعادة ضبط عوامل التصفية">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="1.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M20 12a8 8 0 11-2.34-5.66M20 4v6h-6" />
@@ -82,19 +64,8 @@ if (empty($createButtonConfig) && $defaultCreateRoute) {
             </button>
         </form>
 
-        @php
-            $createButtonAbility = $createButtonConfig['ability'] ?? null;
-        @endphp
-        @if(!empty($createButtonConfig['route'] ?? null) && (!$createButtonAbility || auth()->user()?->can($createButtonAbility)))
-            <a href="{{ $createButtonConfig['route'] }}"
-                class="inline-flex items-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                {{ $createButtonConfig['label'] ?? ('إضافة ' . $title) }}
-            </a>
-        @endif
+        {{-- No create for contacts --}}
+        <div></div>
     </div>
 
     <x-admin.table :columns="$columns ?? []" :rows="$items" :resource="$resourceName" :actions="$actions" :bulk-route="$bulkRoute" />
@@ -105,45 +76,3 @@ if (empty($createButtonConfig) && $defaultCreateRoute) {
     </div>
     @endif
 </x-admin.layout>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const form = document.querySelector('[data-filter-form]');
-        if (!form) return;
-
-        const inputs = form.querySelectorAll('input, select');
-        let timer;
-
-        const submit = () => form.submit();
-        const debouncedSubmit = () => {
-            clearTimeout(timer);
-            timer = setTimeout(submit, 350);
-        };
-
-        inputs.forEach((input) => {
-            const eventName = input.tagName === 'SELECT' ? 'change' : 'input';
-            input.addEventListener(eventName, debouncedSubmit);
-        });
-
-        if (window.jQuery) {
-            window.jQuery(form).find('.js-select2').on('select2:select select2:clear', debouncedSubmit);
-        }
-
-        const resetButton = form.querySelector('[data-filter-reset]');
-        if (resetButton) {
-            resetButton.addEventListener('click', () => {
-                inputs.forEach((input) => {
-                    if (input.tagName === 'SELECT') {
-                        input.value = '';
-                        if (window.jQuery) {
-                            window.jQuery(input).val('').trigger('change');
-                        }
-                    } else {
-                        input.value = '';
-                    }
-                });
-                form.submit();
-            });
-        }
-    });
-</script>

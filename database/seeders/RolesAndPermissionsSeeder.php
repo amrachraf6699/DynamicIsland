@@ -36,6 +36,35 @@ class RolesAndPermissionsSeeder extends Seeder
             }
         }
 
+        // Settings groups permissions (read/update)
+        foreach (['analytics', 'contact', 'mail', 'social', 'notifications', 'website'] as $group) {
+            foreach (['read', 'update'] as $action) {
+                $permissions[] = Permission::firstOrCreate([
+                    'name' => "settings.$group.$action",
+                    'guard_name' => 'web',
+                ]);
+            }
+        }
+
+        // Roles & users CRUD permissions
+        foreach (['roles', 'users'] as $entity) {
+            foreach (['create', 'read', 'update', 'delete'] as $action) {
+                $permissions[] = Permission::firstOrCreate([
+                    'name' => "$entity.$action",
+                    'guard_name' => 'web',
+                ]);
+            }
+        }
+
+        foreach (['contacts', 'newsletters'] as $entity) {
+            foreach (['create', 'read', 'update', 'delete'] as $action) {
+                $permissions[] = Permission::firstOrCreate([
+                    'name' => "$entity.$action",
+                    'guard_name' => 'web',
+                ]);
+            }
+        }
+
         // Create Super-Admin role with all permissions
         $role = Role::firstOrCreate(['name' => 'Super-Admin', 'guard_name' => 'web']);
         $role->syncPermissions($permissions);
@@ -50,4 +79,3 @@ class RolesAndPermissionsSeeder extends Seeder
         }
     }
 }
-

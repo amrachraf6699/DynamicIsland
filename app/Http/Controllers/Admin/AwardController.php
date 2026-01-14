@@ -37,7 +37,7 @@ class AwardController extends BaseCrudController
         'image' => ['nullable', 'image'],
         'link' => ['nullable', 'url'],
         'description' => ['nullable', 'string'],
-        'order' => ['nullable', 'integer'],
+        'order' => ['required', 'integer'],
     ];
     protected array $updateValidationRules = [
         'title' => ['required', 'string', 'max:255'],
@@ -46,7 +46,7 @@ class AwardController extends BaseCrudController
         'image' => ['nullable', 'image'],
         'link' => ['nullable', 'url'],
         'description' => ['nullable', 'string'],
-        'order' => ['nullable', 'integer'],
+        'order' => ['required', 'integer'],
     ];
                 protected array $formSchema = [
         ['type' => 'text', 'name' => 'title', 'label' => 'عنوان الجائزة', 'colspan' => 2, 'group' => 'البيانات الأساسية'],

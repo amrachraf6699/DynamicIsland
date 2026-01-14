@@ -26,7 +26,7 @@ class ProfileController extends Controller
             'pages' => 'الصفحات',
             'services' => 'الخدمات',
             'projects' => 'المشاريع',
-            'testimonials' => 'الشهادات',
+            'testimonials' => 'آراء العملاء',
             'sliders' => 'السلايدر',
             'team-members' => 'أعضاء الفريق',
             'blog-sections' => 'أقسام المدونة',
@@ -37,6 +37,21 @@ class ProfileController extends Controller
             'galleries' => 'المعرض',
             'partners' => 'الشركاء',
             'awards' => 'الجوائز',
+            'contacts' => 'رسائل التواصل',
+            'newsletters' => 'النشرة البريدية',
+            'roles' => 'الأدوار',
+            'users' => 'المستخدمون',
+            'partials' => 'الأجزاء',
+            'settings' => 'الإعدادات',
+        ];
+
+        $settingsGroupLabels = [
+            'analytics' => 'تحليلات الموقع',
+            'contact' => 'التواصل',
+            'mail' => 'إعدادات البريد',
+            'social' => 'منصات التواصل',
+            'notifications' => 'الإشعارات',
+            'website' => 'الموقع',
         ];
 
         $actionLabels = [
@@ -47,14 +62,27 @@ class ProfileController extends Controller
         ];
 
         $permissionsLocalized = $permissions
-            ->map(function ($perm) use ($resourceLabels, $actionLabels) {
-                [$res, $act] = array_pad(explode('.', $perm, 2), 2, null);
+            ->map(function ($perm) use ($resourceLabels, $settingsGroupLabels, $actionLabels) {
+                $segments = explode('.', $perm);
+                $res = array_shift($segments);
+                $actionKey = array_pop($segments);
+                $subResource = implode('.', $segments);
+
+                $resourceKey = $res;
                 $resourceLabel = $resourceLabels[$res] ?? \Illuminate\Support\Str::headline(str_replace('-', ' ', (string) $res));
-                $actionLabel = $actionLabels[$act] ?? $act;
+
+                if ($res === 'settings' && $subResource !== '') {
+                    $resourceKey = "settings.$subResource";
+                    $subLabel = $settingsGroupLabels[$subResource] ?? \Illuminate\Support\Str::headline(str_replace('-', ' ', $subResource));
+                    $resourceLabel = trim(($resourceLabels['settings'] ?? 'الإعدادات') . ' - ' . $subLabel);
+                }
+
+                $actionLabel = $actionLabels[$actionKey] ?? $actionKey;
+
                 return [
-                    'resource_key' => $res,
+                    'resource_key' => $resourceKey,
                     'resource_label' => $resourceLabel,
-                    'action_key' => $act,
+                    'action_key' => $actionKey,
                     'action_label' => $actionLabel,
                     'display' => sprintf('%s: %s', $resourceLabel, $actionLabel),
                 ];

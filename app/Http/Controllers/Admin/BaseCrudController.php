@@ -35,16 +35,7 @@ abstract class BaseCrudController extends Controller
 
     protected array $withRelations = [];
     protected array $searchable = ['id', 'title', 'name'];
-    protected array $filterable = [
-        'is_active' => [
-            'label' => 'الحالة',
-            'type' => 'boolean',
-            'options' => [
-                '1' => 'مفعل',
-                '0' => 'معطل',
-            ],
-        ],
-    ];
+    protected array $filterable = [];
     protected array $sortable = ['id', 'created_at', 'updated_at', 'order'];
     protected array $booleanAttributes = ['is_active', 'is_featured', 'requestable'];
     protected array $fileAttributes = [];
@@ -53,6 +44,7 @@ abstract class BaseCrudController extends Controller
     protected array $formSchema = [];
     protected int $perPage = 15;
     protected ?string $resourceLabel = null;
+    protected array $indexColumns = [];
 
     public function __construct()
     {
@@ -64,7 +56,7 @@ abstract class BaseCrudController extends Controller
         $this->middleware('can:' . $this->permissionName('read'))->only(['index']);
         $this->middleware('can:' . $this->permissionName('create'))->only(['create', 'store']);
         $this->middleware('can:' . $this->permissionName('update'))->only(['edit', 'update']);
-        $this->middleware('can:' . $this->permissionName('delete'))->only(['destroy']);
+        $this->middleware('can:' . $this->permissionName('delete'))->only(['destroy', 'bulkDestroy']);
     }
 
     protected function permissionName(string $action): string
@@ -141,15 +133,48 @@ abstract class BaseCrudController extends Controller
     {
         $item = $this->findModel($id);
 
-        foreach ($this->fileAttributes as $attribute) {
-            $this->deleteFile($item->{$attribute});
-        }
+        $this->deleteAttachedFiles($item);
 
         $item->delete();
 
         return redirect()
             ->route($this->routeName('index'))
             ->with('success', __('تم حذف :resource بنجاح.', ['resource' => $this->resourceLabel()]));
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['nullable'],
+        ]);
+
+        $ids = collect($validated['ids'])
+            ->filter(fn ($id) => filled($id))
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return back()->with('error', 'الرجاء اختيار عنصر واحد على الأقل.');
+        }
+
+        $model = $this->makeModel();
+        $keyName = $model->getKeyName();
+
+        $items = $model->newQuery()->whereIn($keyName, $ids)->get();
+
+        if ($items->isEmpty()) {
+            return back()->with('error', 'العناصر المحددة غير متاحة.');
+        }
+
+        foreach ($items as $item) {
+            $this->deleteAttachedFiles($item);
+            $item->delete();
+        }
+
+        return redirect()
+            ->route($this->routeName('index'))
+            ->with('success', 'تم حذف العناصر المحددة بنجاح.');
     }
 
     protected function buildIndexQuery(Request $request): Builder
@@ -264,6 +289,23 @@ abstract class BaseCrudController extends Controller
         return $data;
     }
 
+    protected function deleteAttachedFiles(Model $item): void
+    {
+        foreach ($this->fileAttributes as $attribute => $disk) {
+            if (is_string($attribute)) {
+                $field = $attribute;
+                $diskName = is_string($disk) ? $disk : 'public';
+            } else {
+                $field = $disk;
+                $diskName = 'public';
+            }
+
+            if (! empty($item->{$field})) {
+                $this->deleteFile($item->{$field}, $diskName);
+            }
+        }
+    }
+
     protected function deleteFile(?string $path, string $disk = 'public'): void
     {
         if ($path) {
@@ -288,12 +330,41 @@ abstract class BaseCrudController extends Controller
 
     protected function getIndexColumns(): array
     {
-        return [
-            ['key' => 'id', 'label' => '#'],
-            ['key' => 'title', 'label' => 'العنوان'],
-            ['key' => 'is_active', 'label' => 'مفعل'],
-            ['key' => 'created_at', 'label' => 'تاريخ الإنشاء'],
-        ];
+        if (!empty($this->indexColumns)) {
+            return $this->indexColumns;
+        }
+
+        $routeName = "admin.{$this->resourceName}.index";
+        $resource = collect(config('admin.resources', []))->firstWhere('route', $routeName);
+        if (is_array($resource) && isset($resource['columns']) && is_array($resource['columns'])) {
+            $columns = [];
+            foreach ($resource['columns'] as $col) {
+                if (is_string($col)) {
+                    $parts = explode(':', $col, 2);
+                    $key = $parts[0];
+                    $type = $parts[1] ?? null;
+                    $entry = [
+                        'key' => $key,
+                        'label' => \Illuminate\Support\Str::headline($key),
+                    ];
+                    if ($type) { $entry['type'] = $type; }
+                    $columns[] = $entry;
+                } elseif (is_array($col)) {
+                    $entry = [
+                        'key' => $col['key'] ?? 'id',
+                        'label' => $col['label'] ?? \Illuminate\Support\Str::headline($col['key'] ?? 'id'),
+                    ];
+                    if (isset($col['type'])) { $entry['type'] = $col['type']; }
+                    if (isset($col['sortable'])) { $entry['sortable'] = (bool) $col['sortable']; }
+                    $columns[] = $entry;
+                }
+            }
+            if (!empty($columns)) {
+                return $columns;
+            }
+        }
+
+        return [ ['key' => 'id', 'label' => '#'] ];
     }
 
     protected function resourceLabel(): string
@@ -363,3 +434,4 @@ abstract class BaseCrudController extends Controller
         return $required;
     }
 }
+

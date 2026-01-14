@@ -65,4 +65,9 @@ class Service extends Model
     {
         return $this->hasMany(Testimonial::class);
     }
+
+    public function serviceRequests(): HasMany
+    {
+        return $this->hasMany(ServiceRequest::class);
+    }
 }
