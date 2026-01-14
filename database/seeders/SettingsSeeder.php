@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Setting;
+use App\Models\Font;
 
 class SettingsSeeder extends Seeder
 {
@@ -44,12 +45,15 @@ class SettingsSeeder extends Seeder
         Setting::set('notifications', 'notify_user_service_request', true);
 
         // Website defaults
+        $defaultFontId = Font::query()->where('slug', 'cairo')->value('id') ?? Font::query()->orderBy('id')->value('id');
+
         Setting::set('website', 'name', config('app.name', 'Dynamic Island CMS'));
         Setting::set('website', 'tagline', '');
         Setting::set('website', 'favicon', '');
         Setting::set('website', 'meta_title', '');
         Setting::set('website', 'meta_description', '');
         Setting::set('website', 'meta_keywords', '');
+        Setting::set('website', 'font_id', $defaultFontId);
         Setting::set('website', 'primary_color', '#6f7bf7');
         Setting::set('website', 'primary_dark_color', '#5a66e8');
         Setting::set('website', 'secondary_color', '#22c55e');

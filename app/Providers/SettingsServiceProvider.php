@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Font;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -48,6 +49,7 @@ class SettingsServiceProvider extends ServiceProvider
             'meta_title' => '',
             'meta_description' => '',
             'meta_keywords' => '',
+            'font_id' => null,
             'primary_color' => '#6f7bf7',
             'primary_dark_color' => '#5a66e8',
             'secondary_color' => '#22c55e',
@@ -60,6 +62,7 @@ class SettingsServiceProvider extends ServiceProvider
         ];
 
         $website = array_merge($defaults, $website);
+        $website['font_id'] = $website['font_id'] ? (int) $website['font_id'] : null;
 
         $logoUrl = $this->resolveMediaUrl($website['logo']);
         $faviconUrl = $this->resolveMediaUrl($website['favicon']);
@@ -86,6 +89,9 @@ class SettingsServiceProvider extends ServiceProvider
             'name' => config('app.name'),
         ], config('admin.brand', []));
 
+        $font = $this->resolveFont($website['font_id']);
+        $website['font_id'] = $font['id'] ?? $website['font_id'];
+
         if ($logoUrl) {
             $brand['logo'] = $logoUrl;
         }
@@ -103,6 +109,7 @@ class SettingsServiceProvider extends ServiceProvider
                 'contact_form_enabled' => $contactEnabled,
                 'sticky_service_request' => $stickyRequest,
                 'admin_prefix' => $adminPrefix,
+                'font' => $font,
             ]),
         ]);
     }
@@ -188,5 +195,44 @@ class SettingsServiceProvider extends ServiceProvider
         }
 
         return asset($value);
+    }
+
+    protected function resolveFont(?int $fontId): array
+    {
+        $fallback = [
+            'id' => null,
+            'name' => 'Cairo',
+            'slug' => 'cairo',
+            'font_family' => '"Cairo", "Helvetica Neue", Arial, sans-serif',
+            'stylesheet_url' => 'https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap',
+        ];
+
+        if (! Schema::hasTable('fonts')) {
+            return $fallback;
+        }
+
+        $font = null;
+
+        if ($fontId) {
+            $font = Font::query()->find($fontId);
+        }
+
+        if (! $font) {
+            $font = Font::query()
+                ->where('slug', 'cairo')
+                ->first() ?? Font::query()->orderBy('id')->first();
+        }
+
+        if (! $font) {
+            return $fallback;
+        }
+
+        return [
+            'id' => $font->id,
+            'name' => $font->name,
+            'slug' => $font->slug,
+            'font_family' => $font->font_family,
+            'stylesheet_url' => $font->stylesheet_url,
+        ];
     }
 }

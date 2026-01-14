@@ -28,6 +28,9 @@ class DatabaseSeeder extends Seeder
         // Seed roles and permissions (creates Super-Admin and grants all permissions)
         $this->call(RolesAndPermissionsSeeder::class);
 
+        // Seed predefined fonts before settings to allow default selection
+        $this->call(FontSeeder::class);
+
         // Seed default settings groups/keys
         $this->call(SettingsSeeder::class);
 

@@ -16,6 +16,9 @@
         'surface' => '#f6f7fb',
         'text' => '#1f2937',
     ], $websiteSettings['colors'] ?? []);
+    $fontConfig = $websiteSettings['font'] ?? [];
+    $fontFamily = $fontConfig['font_family'] ?? "\"Cairo\", system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+    $fontStylesheet = $fontConfig['stylesheet_url'] ?? 'https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap';
     $resources = collect(config('admin.resources', []))
         ->filter(function ($resource) {
             $routeName = $resource['route'] ?? null;
@@ -76,7 +79,9 @@
     <script src="{{ asset('tinymce/tinymce.min.js') }}"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+    @if($fontStylesheet)
+        <link href="{{ $fontStylesheet }}" rel="stylesheet">
+    @endif
     @if($faviconHref = $favicon ? (Str::startsWith($favicon, ['http://', 'https://']) ? $favicon : asset(ltrim($favicon, '/'))) : null)
         <link rel="icon" type="image/png" href="{{ $faviconHref }}">
     @endif
@@ -102,7 +107,7 @@
         }
 
         body {
-            font-family: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: {!!  $fontFamily !!};
             background: radial-gradient(1200px 500px at 80% -10%, color-mix(in srgb, var(--color-primary) 20%, transparent) 0%, var(--color-bg) 55%, #f9fafb 100%);
             min-height: 100vh;
             color: var(--color-text);
@@ -539,7 +544,7 @@
                 toolbar: 'undo redo | formatselect | bold italic underline | alignright aligncenter alignleft | bullist numlist outdent indent | link image media table | code',
                 height: 300,
                 skin: 'oxide',
-                content_style: 'body { direction: rtl; font-family: Cairo, sans-serif; font-size: 14px; color: #1f2937; background: #ffffff; }',
+                content_style: 'body { direction: rtl; font-family: {{ addslashes($fontFamily) }}; font-size: 14px; color: #1f2937; background: #ffffff; }',
                 branding: false,
                 relative_urls: false,
                 directionality: 'rtl',

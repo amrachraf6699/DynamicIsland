@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Font;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -19,7 +21,9 @@ class SettingsController extends Controller
         abort_unless(auth()->user()->can("settings.$group.update"), 403);
 
         $data = $this->loadGroup($group);
-        return view('admin.settings.edit', compact('group', 'data'));
+        $fonts = $group === 'website' ? $this->getFonts() : collect();
+
+        return view('admin.settings.edit', compact('group', 'data', 'fonts'));
     }
 
     public function update(Request $request, string $group)
@@ -85,6 +89,7 @@ class SettingsController extends Controller
                     'meta_title' => Setting::get('website', 'meta_title', ''),
                     'meta_description' => Setting::get('website', 'meta_description', ''),
                     'meta_keywords' => Setting::get('website', 'meta_keywords', ''),
+                    'font_id' => Setting::get('website', 'font_id', $this->defaultFontId()),
                     'primary_color' => Setting::get('website', 'primary_color', '#6f7bf7'),
                     'primary_dark_color' => Setting::get('website', 'primary_dark_color', '#5a66e8'),
                     'secondary_color' => Setting::get('website', 'secondary_color', '#22c55e'),
@@ -172,6 +177,7 @@ class SettingsController extends Controller
                     'meta_title' => ['nullable', 'string', 'max:255'],
                     'meta_description' => ['nullable', 'string', 'max:500'],
                     'meta_keywords' => ['nullable', 'string', 'max:255'],
+                    'font_id' => ['required', 'integer', 'exists:fonts,id'],
                     'primary_color' => ['required', 'regex:/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/'],
                     'primary_dark_color' => ['required', 'regex:/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/'],
                     'secondary_color' => ['required', 'regex:/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/'],
@@ -253,5 +259,27 @@ class SettingsController extends Controller
         }
 
         Storage::disk('public')->delete($path);
+    }
+
+    protected function getFonts()
+    {
+        if (! Schema::hasTable('fonts')) {
+            return collect();
+        }
+
+        return Font::query()
+            ->orderBy('name')
+            ->get();
+    }
+
+    protected function defaultFontId(): ?int
+    {
+        if (! Schema::hasTable('fonts')) {
+            return null;
+        }
+
+        return Font::query()
+            ->where('slug', 'cairo')
+            ->value('id') ?? Font::query()->orderBy('id')->value('id');
     }
 }

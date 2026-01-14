@@ -1,3 +1,8 @@
+@php
+    $font = config('settings.website.font', []);
+    $fontFamily = $font['font_family'] ?? "\"Cairo\", system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+    $fontStylesheet = $font['stylesheet_url'] ?? 'https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap';
+@endphp
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -7,10 +12,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    @if($fontStylesheet)
+        <link href="{{ $fontStylesheet }}" rel="stylesheet">
+    @endif
     <style>
         body {
-            font-family: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: {{ $fontFamily }};
             background: #f8fafc;
             color: #0f172a;
         }

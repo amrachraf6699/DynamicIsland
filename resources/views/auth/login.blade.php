@@ -9,6 +9,11 @@
         'surface' => '#f6f7fb',
         'text' => '#111827',
     ], $websiteSettings['colors'] ?? []);
+    $fontConfig = $websiteSettings['font'] ?? [];
+    $fontFamily = $fontConfig['font_family'] ?? "\"Cairo\", system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+    @if($fontStylesheet)
+        <link href="{{ $fontStylesheet }}" rel="stylesheet">
+    @endif
     $logoSource = $brand['logo'] ?? 'logo.png';
     $logo = \Illuminate\Support\Str::startsWith($logoSource, ['http://', 'https://']) ? $logoSource : asset($logoSource);
     $favicon = $websiteSettings['favicon_url'] ?? null;
@@ -46,7 +51,7 @@
         }
 
         body {
-            font-family: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: {{ $fontFamily }};
             background: radial-gradient(1200px 500px at 80% -10%, color-mix(in srgb, var(--color-primary) 20%, transparent) 0%, var(--color-panel) 55%, #f9fafb 100%);
             min-height: 100vh;
             color: var(--color-text);
